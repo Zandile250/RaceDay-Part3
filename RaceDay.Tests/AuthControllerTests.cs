@@ -11,12 +11,12 @@ public class AuthControllerTests
 {
     private static RegisterRequest NewRequest(UserRole role, string? code = null) => new()
     {
-        FirstName = "Sam", LastName = "Runner", Email = "Sam@Example.com", Password = "Password123",
-        DateOfBirth = new DateTime(1995, 5, 5), Role = role, OrganiserInviteCode = code
+        FullName = "Sam Runner", Email = "Sam@Example.com", Password = "Password123",
+        Role = role, OrganiserInviteCode = code
     };
 
     [Fact]
-    public async Task Register_Participant_StoresHashedPassword()
+    public async Task Register_Participant_StoresHashedPasswordAndRoleId()
     {
         using var db = TestHelpers.NewDb();
         var controller = new AuthController(db, TestHelpers.NewConfig()).WithSession();
@@ -25,9 +25,10 @@ public class AuthControllerTests
 
         Assert.Equal(201, ((ObjectResult)result).StatusCode);
         var saved = db.Users.Single();
-        Assert.NotEqual("Password123", saved.PasswordHash);          // never stored in original form
+        Assert.NotEqual("Password123", saved.PasswordHash);
         Assert.True(BCrypt.Net.BCrypt.Verify("Password123", saved.PasswordHash));
         Assert.Equal("sam@example.com", saved.Email);
+        Assert.Equal(db.Roles.Single(r => r.RoleName == "Participant").RoleId, saved.RoleId);
     }
 
     [Fact]
@@ -43,7 +44,7 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task Register_Organiser_WithoutInviteCode_IsForbidden()
+    public async Task Register_Organiser_WithWrongInviteCode_IsForbidden()
     {
         using var db = TestHelpers.NewDb();
         var controller = new AuthController(db, TestHelpers.NewConfig()).WithSession();
@@ -63,19 +64,20 @@ public class AuthControllerTests
         var result = await controller.Register(NewRequest(UserRole.Organiser, "TEST-CODE"));
 
         Assert.Equal(201, ((ObjectResult)result).StatusCode);
+        Assert.Equal(db.Roles.Single(r => r.RoleName == "Organiser").RoleId, db.Users.Single().RoleId);
     }
 
     [Fact]
     public async Task Login_ValidCredentials_SetsSessionIdAndRole()
     {
         using var db = TestHelpers.NewDb();
-        var user = db.AddUser("a@b.com", UserRole.Participant);
+        var user = db.AddUser("a@b.com", "Participant");
         var controller = new AuthController(db, TestHelpers.NewConfig()).WithSession();
 
         var result = await controller.Login(new LoginRequest { Email = "a@b.com", Password = "Password123" });
 
         Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(user.Id, controller.HttpContext.Session.GetInt32(SessionKeys.UserId));
+        Assert.Equal(user.UserId, controller.HttpContext.Session.GetInt32(SessionKeys.UserId));
         Assert.Equal("Participant", controller.HttpContext.Session.GetString(SessionKeys.Role));
     }
 
@@ -83,7 +85,7 @@ public class AuthControllerTests
     public async Task Login_WrongPassword_ReturnsUnauthorized()
     {
         using var db = TestHelpers.NewDb();
-        db.AddUser("a@b.com", UserRole.Participant);
+        db.AddUser("a@b.com", "Participant");
         var controller = new AuthController(db, TestHelpers.NewConfig()).WithSession();
 
         var result = await controller.Login(new LoginRequest { Email = "a@b.com", Password = "nope-nope" });
@@ -93,7 +95,7 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task Logout_ClearsSession()
+    public void Logout_ClearsSession()
     {
         using var db = TestHelpers.NewDb();
         var controller = new AuthController(db, TestHelpers.NewConfig()).WithSession(5, "Participant");
@@ -101,6 +103,5 @@ public class AuthControllerTests
         controller.Logout();
 
         Assert.Null(controller.HttpContext.Session.GetInt32(SessionKeys.UserId));
-        await Task.CompletedTask;
     }
 }

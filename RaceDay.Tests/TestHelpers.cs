@@ -26,8 +26,14 @@ public class TestSession : ISession
 
 public static class TestHelpers
 {
-    public static AppDbContext NewDb() =>
-        new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    /// <summary>Fresh in-memory database. EnsureCreated also applies the seeded Roles rows.</summary>
+    public static AppDbContext NewDb()
+    {
+        var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        db.Database.EnsureCreated();
+        return db;
+    }
 
     public static IConfiguration NewConfig() =>
         new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
@@ -49,16 +55,47 @@ public static class TestHelpers
         return controller;
     }
 
-    public static User AddUser(this AppDbContext db, string email, UserRole role)
+    public static User AddUser(this AppDbContext db, string email, string role)
     {
+        var roleId = db.Roles.Single(r => r.RoleName == role).RoleId;
         var u = new User
         {
-            FirstName = "Test", LastName = role.ToString(), Email = email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-            DateOfBirth = new DateTime(2000, 1, 1), Role = role
+            RoleId = roleId,
+            FullName = "Test " + role,
+            Email = email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123")
         };
         db.Users.Add(u);
         db.SaveChanges();
         return u;
+    }
+
+    public static Event AddEvent(this AppDbContext db, int organiserId, string name = "Soweto 10km")
+    {
+        var ev = new Event
+        {
+            OrganiserId = organiserId, EventName = name, Description = "Fun run",
+            EventDate = DateTime.Now.AddMonths(2), Location = "Soweto",
+            DistanceKm = 10, EventType = EventType.Run
+        };
+        db.Events.Add(ev);
+        db.SaveChanges();
+        return ev;
+    }
+
+    public static Category AddCategory(this AppDbContext db, int eventId, string name = "10km", int max = 0)
+    {
+        var c = new Category { EventId = eventId, CategoryName = name, DistanceKm = 10, Price = 100, MaxParticipants = max };
+        db.Categories.Add(c);
+        db.SaveChanges();
+        return c;
+    }
+
+    public static Enrolment AddEnrolment(this AppDbContext db, int participantId, int categoryId)
+    {
+        var e = new Enrolment { ParticipantId = participantId, CategoryId = categoryId };
+        db.Enrolments.Add(e);
+        db.SaveChanges();
+        return e;
     }
 }

@@ -7,6 +7,7 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+    public DbSet<Role> Roles => Set<Role>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Category> Categories => Set<Category>();
@@ -15,29 +16,40 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder b)
     {
-        b.Entity<User>().HasIndex(u => u.Email).IsUnique();
-        b.Entity<User>().Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
+        // Roles lookup table, seeded with the two system roles (same ids as the SQL script)
+        b.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
+        b.Entity<Role>().HasData(
+            new Role { RoleId = 1, RoleName = "Organiser" },
+            new Role { RoleId = 2, RoleName = "Participant" });
 
-        b.Entity<Event>().Property(e => e.EventType).HasConversion<string>().HasMaxLength(20);
-        b.Entity<Event>().Property(e => e.DistanceKm).HasPrecision(6, 2);
+        b.Entity<User>().HasIndex(u => u.Email).IsUnique();
+        b.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("GETDATE()");
+        b.Entity<User>().HasOne(u => u.Role).WithMany().HasForeignKey(u => u.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        b.Entity<Event>().Property(e => e.EventType).HasConversion<string>().HasMaxLength(20).IsUnicode(false);
+        b.Entity<Event>().Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
         b.Entity<Event>().HasOne(e => e.Organiser).WithMany().HasForeignKey(e => e.OrganiserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        b.Entity<Category>().Property(c => c.Price).HasDefaultValue(0m);
+        b.Entity<Category>().Property(c => c.MaxParticipants).HasDefaultValue(0);
         b.Entity<Category>().HasOne(c => c.Event).WithMany(e => e.Categories)
-            .HasForeignKey(c => c.EventId).OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(c => c.EventId).OnDelete(DeleteBehavior.Restrict);
 
-        // One enrolment per participant per event
-        b.Entity<Enrolment>().HasIndex(e => new { e.EventId, e.ParticipantId }).IsUnique();
-        b.Entity<Enrolment>().HasOne(e => e.Event).WithMany().HasForeignKey(e => e.EventId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // UQ_Enrolments_Participant_Category
+        b.Entity<Enrolment>().HasIndex(e => new { e.ParticipantId, e.CategoryId }).IsUnique();
+        b.Entity<Enrolment>().Property(e => e.EnrolmentDate).HasDefaultValueSql("GETDATE()");
+        b.Entity<Enrolment>().Property(e => e.Status).HasDefaultValue("Confirmed");
         b.Entity<Enrolment>().HasOne(e => e.Participant).WithMany().HasForeignKey(e => e.ParticipantId)
             .OnDelete(DeleteBehavior.Restrict);
         b.Entity<Enrolment>().HasOne(e => e.Category).WithMany().HasForeignKey(e => e.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // One result per enrolment
-        b.Entity<Result>().HasIndex(r => r.EnrolmentId).IsUnique();
+        // Results is one-to-one with Enrolments (EnrolmentId is UNIQUE)
+        b.Entity<Result>().Property(r => r.Status).HasDefaultValue("Finished");
+        b.Entity<Result>().Property(r => r.CapturedAt).HasDefaultValueSql("GETDATE()");
         b.Entity<Result>().HasOne(r => r.Enrolment).WithOne(e => e.Result)
-            .HasForeignKey<Result>(r => r.EnrolmentId).OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey<Result>(r => r.EnrolmentId).OnDelete(DeleteBehavior.Restrict);
     }
 }

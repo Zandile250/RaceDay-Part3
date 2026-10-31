@@ -1,0 +1,93 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var upcoming = Model.Events.Where(e => e.IsUpcoming).OrderBy(e => e.Event.EventDate).ToList();
+}
+@await Html.PartialAsync("_PageHead", new PageHead("Organiser dashboard", $"Welcome back, {Me.User!.FirstName}. Here's how your events are shaping up."))
+
+<div class="container py-4">
+    <partial name="_Alerts" />
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="rd-card stat-tile"><i class="bi bi-calendar-event"></i><div class="num">@Model.TotalEvents</div><div class="lbl">Events created</div></div></div>
+        <div class="col-6 col-lg-3"><div class="rd-card stat-tile"><i class="bi bi-calendar-check"></i><div class="num">@Model.UpcomingEvents</div><div class="lbl">Upcoming</div></div></div>
+        <div class="col-6 col-lg-3"><div class="rd-card stat-tile"><i class="bi bi-people-fill"></i><div class="num">@Model.TotalEnrolments</div><div class="lbl">Total enrolments</div></div></div>
+        <div class="col-6 col-lg-3"><div class="rd-card stat-tile"><i class="bi bi-hourglass-split"></i>
+            <div class="num">@(Model.NextEvent is null ? "—" : UiHelpers.Countdown(Model.NextEvent.Event.EventDate))</div><div class="lbl">Next event</div></div></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="rd-card">
+                <div class="rd-card-head">
+                    <h2>Enrolments per event</h2>
+                    <a class="btn btn-primary btn-sm" asp-controller="OrganiserEvents" asp-action="Create"><i class="bi bi-plus-lg"></i> New event</a>
+                </div>
+                @if (Model.Events.Count == 0)
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-flag"></i>
+                        <h3>No events yet</h3>
+                        <p>Create your first event and participants can start enrolling.</p>
+                        <a class="btn btn-primary" asp-controller="OrganiserEvents" asp-action="Create">Create an event</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table rd-table">
+                            <thead><tr><th>Event</th><th>Date</th><th class="text-center">Enrolments</th><th>Status</th><th></th></tr></thead>
+                            <tbody>
+                            @foreach (var s in Model.Events.OrderByDescending(s => s.Event.EventDate))
+                            {
+                                <tr>
+                                    <td><a class="fw-semibold" asp-controller="Events" asp-action="Details" asp-route-id="@s.Event.EventId">@s.Event.EventName</a>
+                                        <div class="small text-muted">@s.Event.Location</div></td>
+                                    <td>@UiHelpers.DateShort(s.Event.EventDate)</td>
+                                    <td class="text-center"><a class="fw-bold fs-5 text-decoration-none" asp-controller="OrganiserEnrolments" asp-action="Index" asp-route-eventId="@s.Event.EventId">@s.Enrolments</a></td>
+                                    <td>@if (s.IsUpcoming) { <span class="status-pill status-confirmed">Upcoming</span> } else { <span class="status-pill status-neutral">Completed</span> }</td>
+                                    <td class="text-end">
+                                        @if (!s.IsUpcoming)
+                                        {
+                                            <a class="btn btn-outline-primary btn-sm" asp-controller="OrganiserResults" asp-action="Index" asp-route-eventId="@s.Event.EventId">Results</a>
+                                        }
+                                        else
+                                        {
+                                            <a class="btn btn-outline-secondary btn-sm" asp-controller="OrganiserCategories" asp-action="Index" asp-route-eventId="@s.Event.EventId">Categories</a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="rd-card">
+                <div class="rd-card-head"><h2>Upcoming dates</h2></div>
+                @if (upcoming.Count == 0)
+                {
+                    <div class="rd-card-body text-muted">Nothing scheduled.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                    @foreach (var s in upcoming.Take(6))
+                    {
+                        <li class="list-group-item d-flex gap-3 align-items-center p-3">
+                            <div class="date-badge"><div class="m">@s.Event.EventDate.ToString("MMM", System.Globalization.CultureInfo.InvariantCulture)</div><div class="d">@s.Event.EventDate.Day</div></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">@s.Event.EventName</div>
+                                <div class="small text-muted">@UiHelpers.Countdown(s.Event.EventDate) · @s.Enrolments enrolled</div>
+                            </div>
+                        </li>
+                    }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

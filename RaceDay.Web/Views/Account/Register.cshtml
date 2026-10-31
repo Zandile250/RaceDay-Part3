@@ -1,0 +1,68 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+<div class="container">
+    <div class="auth-wrap wide">
+        <div class="rd-card">
+            <div class="rd-card-body p-4">
+                <h1 class="mb-1">Join RaceDay</h1>
+                <p class="text-muted">Create your account in under a minute.</p>
+
+                <form asp-action="Register" method="post" data-busy="Creating account…" novalidate>
+                    <div asp-validation-summary="ModelOnly"></div>
+
+                    <div class="row g-3 role-choice mb-3">
+                        <div class="col-sm-6">
+                            <input type="radio" name="Role" id="role-p" value="Participant" checked="@(Model.Role != "Organiser")" />
+                            <label for="role-p"><i class="bi bi-person-walking me-1"></i>Participant<small>Find events and enrol</small></label>
+                        </div>
+                        <div class="col-sm-6">
+                            <input type="radio" name="Role" id="role-o" value="Organiser" checked="@(Model.Role == "Organiser")" />
+                            <label for="role-o"><i class="bi bi-megaphone me-1"></i>Organiser<small>Create and run events</small></label>
+                        </div>
+                    </div>
+                    <span asp-validation-for="Role" class="field-validation-error"></span>
+
+                    <div id="invite-block" class="mb-3 d-none">
+                        <label asp-for="OrganiserInviteCode" class="form-label"></label>
+                        <input asp-for="OrganiserInviteCode" class="form-control" autocomplete="off" />
+                        <div class="form-text">Organisers register with an invite code from the RaceDay team.</div>
+                        <span asp-validation-for="OrganiserInviteCode" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="FullName" class="field-validation-error"></span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" autocomplete="email" />
+                            <span asp-validation-for="Email" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="PhoneNumber" class="form-label"></label>
+                            <input asp-for="PhoneNumber" class="form-control" autocomplete="tel" />
+                            <span asp-validation-for="PhoneNumber" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                            <div class="form-text">At least 8 characters.</div>
+                            <span asp-validation-for="Password" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mt-4">Create account</button>
+                </form>
+            </div>
+        </div>
+        <p class="text-center mt-3 text-muted">Already registered? <a asp-action="Login">Log in</a></p>
+    </div>
+</div>

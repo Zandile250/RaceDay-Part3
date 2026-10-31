@@ -67,7 +67,7 @@ Trust the development certificate once with `dotnet dev-certs https --trust`.
 
 The same configuration key (`Api:BaseUrl`) is used in Docker, so the app behaves identically in both.
 
-### Database migration for Part 3
+### Database migration 
 
 The database is created by EF Core migrations when the API starts (also in Docker). Part 3 adds one column,
 `Users.ProfilePictureUrl`, so create a migration once and commit it:
@@ -88,6 +88,8 @@ Set `AzureStorage__ConnectionString` (user secrets or an environment variable) o
 
 ```
 dotnet test RaceDay.Tests/RaceDay.Tests.csproj
+<img width="510" height="384" alt="image" src="https://github.com/user-attachments/assets/acc82f33-4181-49da-94f9-560046991f3d" />
+
 ```
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the API tests, builds the MVC project and builds the MVC Docker image

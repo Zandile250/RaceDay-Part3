@@ -1,0 +1,52 @@
+@model RosterViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = "Enrolments · " + e.EventName;
+    var byCategory = Model.Enrolments.GroupBy(x => x.CategoryName).OrderBy(g => g.Key).ToList();
+}
+@await Html.PartialAsync("_PageHead", new PageHead("Enrolments", e.EventName + " · " + UiHelpers.DateLong(e.EventDate), "Back to my events", Url.Action("Index", "OrganiserEvents")))
+
+<div class="container py-4">
+    <partial name="_Alerts" />
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="rd-card stat-tile"><i class="bi bi-people-fill"></i><div class="num">@Model.Enrolments.Count</div><div class="lbl">Total enrolled</div></div></div>
+        @foreach (var g in byCategory.Take(3))
+        {
+            <div class="col-6 col-md-3"><div class="rd-card stat-tile"><i class="bi bi-tag-fill"></i><div class="num">@g.Count()</div><div class="lbl">@g.Key</div></div></div>
+        }
+    </div>
+
+    <div class="rd-card">
+        <div class="rd-card-head">
+            <h2>Participants</h2>
+            <div class="d-flex gap-2 align-items-center">
+                <input class="form-control form-control-sm" style="width: 220px;" type="search" placeholder="Search participants…" aria-label="Search participants" data-filter="#roster" />
+                <a class="btn btn-outline-primary btn-sm" asp-controller="OrganiserResults" asp-action="Index" asp-route-eventId="@e.EventId"><i class="bi bi-stopwatch"></i> Results</a>
+            </div>
+        </div>
+        @if (Model.Enrolments.Count == 0)
+        {
+            <div class="empty-state"><i class="bi bi-people"></i><h3>Nobody has enrolled yet</h3><p class="mb-0">Participants will appear here as soon as they enrol.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table rd-table" id="roster">
+                    <thead><tr><th>Participant</th><th>Category</th><th>Enrolled on</th><th>Status</th></tr></thead>
+                    <tbody>
+                    @foreach (var x in Model.Enrolments)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@x.ParticipantName</td>
+                            <td>@x.CategoryName</td>
+                            <td>@UiHelpers.DateShort(x.EnrolmentDate)</td>
+                            <td><partial name="_StatusPill" model="x.Status" /></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,69 @@
+@model ResultsPageViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = "Results · " + e.EventName;
+    var statuses = new[] { "Finished", "DNF", "DNS", "Disqualified" };
+    var captured = Model.Rows.Count(r => r.Result is not null);
+}
+@await Html.PartialAsync("_PageHead", new PageHead("Results", e.EventName + " · " + UiHelpers.DateLong(e.EventDate), "Back to my events", Url.Action("Index", "OrganiserEvents")))
+
+<div class="container py-4">
+    <partial name="_Alerts" />
+
+    @if (e.EventDate > DateTime.Now)
+    {
+        <div class="alert alert-info"><i class="bi bi-info-circle-fill me-1"></i> This event hasn't taken place yet. Results are normally entered once it has concluded.</div>
+    }
+
+    <div class="rd-card">
+        <div class="rd-card-head">
+            <h2>Enter &amp; publish results</h2>
+            <span class="text-muted small">@captured of @Model.Rows.Count captured</span>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="empty-state"><i class="bi bi-people"></i><h3>No participants to score</h3><p class="mb-0">Results can be captured once participants have enrolled.</p></div>
+        }
+        else
+        {
+            <div class="px-4 pt-3 small text-muted">Finish time as <strong>h:mm:ss</strong> (e.g. 1:23:45). Saving publishes the result to the participant straight away.</div>
+            @foreach (var row in Model.Rows)
+            {
+                var id = row.Enrolment.EnrolmentId;
+                <form class="result-row" id="row-@id" asp-action="Save" asp-route-eventId="@e.EventId" method="post" data-busy="Saving…">
+                    <input type="hidden" name="EnrolmentId" value="@id" />
+                    <input type="hidden" name="ResultId" value="@row.Result?.ResultId" />
+                    <div class="row g-2 align-items-end">
+                        <div class="col-lg-3">
+                            <div class="fw-semibold">@row.Enrolment.ParticipantName</div>
+                            <div class="small text-muted">@row.Enrolment.CategoryName
+                                @if (row.Result is not null) { <span class="ms-1"><partial name="_StatusPill" model="row.Result.Status" /></span> }
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <label class="form-label small" for="time-@id">Finish time</label>
+                            <input class="form-control" id="time-@id" name="FinishTimeText" placeholder="1:23:45" inputmode="numeric" value="@UiHelpers.FinishTimeInput(row.Result?.FinishTime)" />
+                        </div>
+                        <div class="col-6 col-lg-2">
+                            <label class="form-label small" for="pos-@id">Position</label>
+                            <input class="form-control" id="pos-@id" name="Position" type="number" min="1" step="1" value="@row.Result?.Position" />
+                        </div>
+                        <div class="col-6 col-lg-2">
+                            <label class="form-label small" for="st-@id">Status</label>
+                            <select class="form-select" id="st-@id" name="Status">
+                                @foreach (var s in statuses)
+                                {
+                                    <option value="@s" selected="@(string.Equals(row.Result?.Status ?? "Finished", s, StringComparison.OrdinalIgnoreCase))">@s</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6 col-lg-2">
+                            <button type="submit" class="btn btn-primary w-100">@(row.Result is null ? "Publish" : "Update")</button>
+                        </div>
+                    </div>
+                </form>
+            }
+        }
+    </div>
+</div>

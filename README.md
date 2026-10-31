@@ -94,5 +94,5 @@ GitHub Actions (`.github/workflows/ci.yml`) runs the API tests, builds the MVC p
 on every push to `main`, `part-2` and `part-3`.
 
 ## CI build status
+<img width="701" height="219" alt="image" src="https://github.com/user-attachments/assets/d8813d5d-9199-465e-9922-672641920644" />
 
-(Add the screenshot of the successful green GitHub Actions run here.)

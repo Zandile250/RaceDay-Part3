@@ -1,0 +1,60 @@
+@model CategoriesPageViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = "Categories · " + e.EventName;
+    ViewData["FormAction"] = Url.Action("Create", new { eventId = e.EventId });
+    ViewData["SubmitLabel"] = "Add category";
+}
+@await Html.PartialAsync("_PageHead", new PageHead("Categories", e.EventName + " · " + UiHelpers.DateLong(e.EventDate), "Back to my events", Url.Action("Index", "OrganiserEvents")))
+
+<div class="container py-4">
+    <partial name="_Alerts" />
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="rd-card">
+                <div class="rd-card-head"><h2>Current categories</h2><span class="text-muted small">@e.Categories.Count total</span></div>
+                @if (e.Categories.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-tags"></i><h3>No categories yet</h3><p class="mb-0">Add at least one so participants can enrol.</p></div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table rd-table">
+                            <thead><tr><th>Category</th><th>Distance</th><th>Fee</th><th>Limit</th><th></th></tr></thead>
+                            <tbody>
+                            @foreach (var c in e.Categories.OrderBy(c => c.DistanceKm))
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@c.CategoryName</td>
+                                    <td>@UiHelpers.Km(c.DistanceKm)</td>
+                                    <td>@UiHelpers.Money(c.Price)</td>
+                                    <td>@(c.MaxParticipants > 0 ? c.MaxParticipants.ToString() : "None")</td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1">
+                                            <a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-eventId="@e.EventId" asp-route-categoryId="@c.CategoryId"><i class="bi bi-pencil"></i></a>
+                                            <form asp-action="Delete" asp-route-eventId="@e.EventId" asp-route-categoryId="@c.CategoryId" method="post"
+                                                  data-confirm="Remove the “@c.CategoryName” category?">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="rd-card">
+                <div class="rd-card-head"><h2>Add a category</h2></div>
+                <div class="rd-card-body">
+                    <partial name="_CategoryForm" model="Model.Form" view-data="ViewData" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

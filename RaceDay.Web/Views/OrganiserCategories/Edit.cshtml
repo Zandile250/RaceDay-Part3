@@ -1,0 +1,16 @@
+@model CategoryFormViewModel
+@{
+    ViewData["Title"] = "Edit category";
+    var eventName = ViewData["EventName"] as string ?? "";
+    ViewData["FormAction"] = Url.Action("Edit", new { eventId = Model.EventId, categoryId = Model.CategoryId });
+    ViewData["SubmitLabel"] = "Save changes";
+    ViewData["CancelUrl"] = Url.Action("Index", new { eventId = Model.EventId });
+}
+@await Html.PartialAsync("_PageHead", new PageHead("Edit category", eventName, "Back to categories", Url.Action("Index", new { eventId = Model.EventId })))
+
+<div class="container py-4" style="max-width: 720px;">
+    <partial name="_Alerts" />
+    <div class="rd-card"><div class="rd-card-body p-4">
+        <partial name="_CategoryForm" model="Model" view-data="ViewData" />
+    </div></div>
+</div>

@@ -1,0 +1,82 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = "Upcoming events";
+    var f = Model.Filter;
+}
+@await Html.PartialAsync("_PageHead", new PageHead("Upcoming events", $"Hi {Me.User!.FirstName}, here's what's coming up. Pick your race."))
+
+<div class="container py-4">
+    <partial name="_Alerts" />
+
+    <form method="get" asp-controller="Home" asp-action="Index" class="rd-card filter-bar mb-4" aria-label="Filter events">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-4">
+                <label class="form-label" for="q">Search</label>
+                <input class="form-control" id="q" name="Q" value="@f.Q" placeholder="Name, place or keyword" />
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label" for="type">Type</label>
+                <select class="form-select" id="type" name="Type">
+                    <option value="">All types</option>
+                    @foreach (var t in new[] { "Run", "Walk", "Cycle" })
+                    {
+                        <option value="@t" selected="@(string.Equals(f.Type, t, StringComparison.OrdinalIgnoreCase))">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-lg-3">
+                <label class="form-label" for="from">From</label>
+                <input class="form-control" type="date" id="from" name="From" value="@f.From?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-6 col-lg-3">
+                <label class="form-label" for="to">To</label>
+                <input class="form-control" type="date" id="to" name="To" value="@f.To?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label" for="min">Min km</label>
+                <input class="form-control" type="number" step="0.1" min="0" id="min" name="MinKm" value="@f.MinKm" />
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label" for="max">Max km</label>
+                <input class="form-control" type="number" step="0.1" min="0" id="max" name="MaxKm" value="@f.MaxKm" />
+            </div>
+            <div class="col-lg-8 d-flex gap-2 justify-content-lg-end">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Apply filters</button>
+                @if (f.IsActive)
+                {
+                    <a class="btn btn-outline-secondary" asp-action="Index">Clear</a>
+                }
+            </div>
+        </div>
+    </form>
+
+    @if (Model.TotalUpcoming == 0)
+    {
+        <div class="rd-card empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <h3>No upcoming events yet</h3>
+            <p class="mb-0">Check back soon. Organisers are adding new events all the time.</p>
+        </div>
+    }
+    else if (Model.Events.Count == 0)
+    {
+        <div class="rd-card empty-state">
+            <i class="bi bi-search"></i>
+            <h3>No events match those filters</h3>
+            <p>Try widening the dates or distance.</p>
+            <a class="btn btn-outline-primary" asp-action="Index">Clear filters</a>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mb-3">Showing <strong>@Model.Events.Count</strong> of @Model.TotalUpcoming upcoming @(Model.TotalUpcoming == 1 ? "event" : "events")</p>
+        <div class="row g-4">
+            @foreach (var e in Model.Events)
+            {
+                <div class="col-md-6 col-xl-4">
+                    @await Html.PartialAsync("_EventCard", new EventCardModel(e, Model.EnrolledEventIds.Contains(e.EventId)))
+                </div>
+            }
+        </div>
+    }
+</div>

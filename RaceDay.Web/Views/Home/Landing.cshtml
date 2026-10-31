@@ -1,0 +1,26 @@
+@{
+    ViewData["Title"] = "Run it. Walk it. Ride it.";
+}
+<section class="landing-hero">
+    <div class="container">
+        <h1>Your next<br />start line<br /><span>is waiting.</span></h1>
+        <p>Find road runs, walks and cycle events, enrol in seconds and keep every finish time in one place.</p>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Register">Get started</a>
+            <a class="btn btn-outline-light btn-lg" asp-controller="Account" asp-action="Login">Log in</a>
+        </div>
+    </div>
+</section>
+
+<div class="container" style="margin-top: -3rem; position: relative; z-index: 2;">
+    <partial name="_Alerts" />
+    <div class="row g-3">
+        <div class="col-md-4"><div class="rd-card feature"><i class="bi bi-search"></i><h3>Find your event</h3><p class="mb-0 text-muted">Filter upcoming events by type, date, distance and place.</p></div></div>
+        <div class="col-md-4"><div class="rd-card feature"><i class="bi bi-ticket-perforated"></i><h3>Enrol instantly</h3><p class="mb-0 text-muted">Pick a category and you're in. Track every enrolment and its status.</p></div></div>
+        <div class="col-md-4"><div class="rd-card feature"><i class="bi bi-trophy"></i><h3>Own your results</h3><p class="mb-0 text-muted">Finish times and positions appear as soon as organisers publish them.</p></div></div>
+    </div>
+    <div class="rd-card mt-4 p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div><h3 class="mb-1">Organising a race?</h3><p class="mb-0 text-muted">Create events, add categories, see who enrolled and publish results.</p></div>
+        <a class="btn btn-dark" asp-controller="Account" asp-action="Register">Register as an organiser</a>
+    </div>
+</div>

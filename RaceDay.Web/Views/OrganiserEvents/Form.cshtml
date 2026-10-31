@@ -1,0 +1,80 @@
+@model EventFormViewModel
+@{
+    var editing = Model.EventId is not null;
+    ViewData["Title"] = editing ? "Edit event" : "New event";
+    var existing = UiHelpers.ImageSrc(Model.ExistingImageUrl);
+}
+@await Html.PartialAsync("_PageHead", new PageHead(editing ? "Edit event" : "Create an event", "Fill in the details participants will see.", "Back to my events", Url.Action("Index")))
+
+<div class="container py-4" style="max-width: 900px;">
+    <partial name="_Alerts" />
+
+    <div class="rd-card">
+        <div class="rd-card-body p-4">
+            <form method="post" enctype="multipart/form-data" asp-action="@(editing ? "Edit" : "Create")" asp-route-id="@Model.EventId"
+                  data-busy="Saving…" novalidate>
+                <div asp-validation-summary="ModelOnly"></div>
+                <input type="hidden" asp-for="ExistingImageUrl" />
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="EventName" class="form-label"></label>
+                        <input asp-for="EventName" class="form-control" placeholder="e.g. Soweto 10 km Fun Run" />
+                        <span asp-validation-for="EventName" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="What makes this event great?"></textarea>
+                        <span asp-validation-for="Description" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EventDate" class="form-label"></label>
+                        <input asp-for="EventDate" class="form-control" type="datetime-local" />
+                        <span asp-validation-for="EventDate" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Location" class="form-label"></label>
+                        <input asp-for="Location" class="form-control" placeholder="Town, venue or park" />
+                        <span asp-validation-for="Location" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DistanceKm" class="form-label"></label>
+                        <input asp-for="DistanceKm" class="form-control" type="number" step="0.01" min="0.1" max="999.99" />
+                        <div class="form-text">The headline distance. Add individual distances as categories afterwards.</div>
+                        <span asp-validation-for="DistanceKm" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EventType" class="form-label"></label>
+                        <select asp-for="EventType" class="form-select">
+                            <option value="Run">Run</option>
+                            <option value="Walk">Walk</option>
+                            <option value="Cycle">Cycle</option>
+                        </select>
+                        <span asp-validation-for="EventType" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="RouteInfo" class="form-label"></label>
+                        <textarea asp-for="RouteInfo" class="form-control" rows="2" placeholder="Start, turnaround points, finish…"></textarea>
+                        <span asp-validation-for="RouteInfo" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Banner" class="form-label"></label>
+                        <input asp-for="Banner" class="form-control" type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                               data-max-mb="5" data-preview="#banner-preview" data-error="#banner-error" />
+                        <div class="form-text">@(editing ? "Choose a file only if you want to replace the current banner. " : "")JPG, PNG, WebP or GIF, up to 5 MB.</div>
+                        <div id="banner-error" class="text-danger" role="alert"></div>
+                        <span asp-validation-for="Banner" class="field-validation-error"></span>
+                        <div class="mt-2" style="max-width: 420px;">
+                            <img id="banner-preview" class="img-fluid rounded @(existing is null ? "d-none" : "")" src="@existing" alt="Banner preview" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">@(editing ? "Save changes" : "Create event")</button>
+                    <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

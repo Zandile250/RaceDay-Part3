@@ -2,12 +2,13 @@ name: RaceDay CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, part-2, part-3 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, part-2, part-3 ]
 
 jobs:
-  build-and-test:
+  api-build-and-test:
+    name: API - build and test
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -26,3 +27,24 @@ jobs:
 
       - name: Run unit tests
         run: dotnet test RaceDay.Tests/RaceDay.Tests.csproj --configuration Release --no-build --verbosity normal
+
+  web-build:
+    name: MVC web app - build and container image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore MVC project
+        run: dotnet restore RaceDay.Web/RaceDay.Web.csproj
+
+      - name: Build MVC project
+        run: dotnet build RaceDay.Web/RaceDay.Web.csproj --configuration Release --no-restore
+
+      - name: Build MVC Docker image
+        run: docker build --tag raceday-web:ci ./RaceDay.Web

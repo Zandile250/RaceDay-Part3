@@ -1,0 +1,19 @@
+@model BannerModel
+@{
+    var src = UiHelpers.ImageSrc(Model.Url);
+    var hero = Model.Hero ? " hero" : "";
+}
+@if (src is not null)
+{
+    <div class="rd-banner@hero">
+        <img src="@src" alt="@Model.Alt" loading="lazy" />
+        @if (Model.ShowTypeChip) { <span class="chip type-chip"><i class="bi @UiHelpers.TypeIcon(Model.EventType)"></i>@Model.EventType</span> }
+    </div>
+}
+else
+{
+    <div class="rd-banner ph @UiHelpers.TypeClass(Model.EventType)@hero" role="img" aria-label="@Model.Alt">
+        <i class="bi @UiHelpers.TypeIcon(Model.EventType)"></i>
+        @if (Model.ShowTypeChip) { <span class="chip type-chip"><i class="bi @UiHelpers.TypeIcon(Model.EventType)"></i>@Model.EventType</span> }
+    </div>
+}

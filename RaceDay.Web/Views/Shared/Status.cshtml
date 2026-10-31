@@ -1,0 +1,13 @@
+@model StatusPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<div class="container py-5 text-center" style="max-width: 640px;">
+    <div class="rd-display" style="font-size: 7rem; line-height: 1; font-weight: 800; font-style: italic; color: var(--rd-orange);">@Model.Code</div>
+    <h1 class="mb-2">@Model.Title</h1>
+    <p class="text-muted fs-5">@Model.Message</p>
+    <div class="d-flex gap-2 justify-content-center mt-4">
+        <a class="btn btn-primary" asp-controller="Home" asp-action="Index"><i class="bi bi-house-door"></i> Back to home</a>
+        <a class="btn btn-outline-secondary" href="javascript:history.back()">Go back</a>
+    </div>
+</div>

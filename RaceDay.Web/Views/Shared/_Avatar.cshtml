@@ -1,0 +1,13 @@
+@model AvatarModel
+@{
+    var src = UiHelpers.ImageSrc(Model.Url);
+    var css = "rd-avatar" + (Model.Large ? " lg" : "");
+}
+@if (src is not null)
+{
+    <img class="@css" src="@src" alt="@Model.Alt" />
+}
+else
+{
+    <span class="@css" role="img" aria-label="@(string.IsNullOrEmpty(Model.Alt) ? "Initials avatar" : Model.Alt)">@Model.Initials</span>
+}

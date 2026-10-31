@@ -1,0 +1,26 @@
+@model EventCardModel
+@{
+    var e = Model.Event;
+}
+<article class="rd-card event-card">
+    @await Html.PartialAsync("_EventBanner", new BannerModel(e.ImageUrl, e.EventType, e.EventName + " banner"))
+    <div class="body">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <h3><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.EventName</a></h3>
+            @if (Model.Enrolled) { <span class="status-pill status-confirmed"><i class="bi bi-check-circle-fill"></i>Enrolled</span> }
+        </div>
+        <div class="event-meta">
+            <span><i class="bi bi-calendar3"></i>@UiHelpers.DateLong(e.EventDate) · @UiHelpers.TimeOfDay(e.EventDate)</span>
+            <span><i class="bi bi-geo-alt-fill"></i>@e.Location</span>
+            <span><i class="bi bi-signpost-split"></i>@UiHelpers.Km(e.DistanceKm)</span>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(e.Description))
+        {
+            <p class="mb-0 text-muted small">@(e.Description.Length > 110 ? e.Description[..110].TrimEnd() + "…" : e.Description)</p>
+        }
+        <div class="mt-auto pt-2 d-flex justify-content-between align-items-center">
+            <span class="small fw-semibold text-muted">@UiHelpers.Countdown(e.EventDate)</span>
+            <a class="btn btn-primary btn-sm" asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">View event <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+</article>

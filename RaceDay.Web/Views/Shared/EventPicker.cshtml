@@ -1,0 +1,37 @@
+@model EventPickerViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+@await Html.PartialAsync("_PageHead", new PageHead(Model.Title, Model.Intro))
+
+<div class="container py-4">
+    <partial name="_Alerts" />
+
+    @if (Model.Events.Count == 0)
+    {
+        <div class="rd-card empty-state">
+            <i class="bi bi-calendar-plus"></i>
+            <h3>You haven't created any events yet</h3>
+            <p>Create your first event, then come back here.</p>
+            <a class="btn btn-primary" asp-controller="OrganiserEvents" asp-action="Create"><i class="bi bi-plus-lg"></i> Create an event</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var e in Model.Events)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="rd-card p-3 h-100 d-flex gap-3 align-items-center">
+                        <div class="date-badge"><div class="m">@e.EventDate.ToString("MMM", System.Globalization.CultureInfo.InvariantCulture)</div><div class="d">@e.EventDate.Day</div></div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">@e.EventName</div>
+                            <div class="small text-muted"><i class="bi bi-geo-alt-fill text-primary"></i> @e.Location</div>
+                            <a class="btn btn-primary btn-sm mt-2" href="@Model.LinkFor(e)"><i class="bi @Model.Icon"></i> @Model.ActionLabel</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,103 @@
+@{
+    var controller = (ViewContext.RouteData.Values["controller"] as string) ?? "";
+    string Active(params string[] names) => names.Contains(controller, StringComparer.OrdinalIgnoreCase) ? "active" : "";
+    var user = Me.User;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1b34" />
+    <title>@(ViewData["Title"] is string t ? t + " · " : "")RaceDay</title>
+    <link rel="icon" type="image/svg+xml" href="~/img/favicon.svg" />
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <nav class="navbar navbar-expand-lg rd-nav" aria-label="Main navigation">
+        <div class="container">
+            <a class="rd-brand" asp-controller="Home" asp-action="Index" aria-label="RaceDay home">
+                <span class="rd-logo-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="rd-wordmark">Race<span>Day</span></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                @if (user is null)
+                {
+                    <ul class="navbar-nav me-auto"></ul>
+                    <div class="d-flex gap-2 py-2 py-lg-0">
+                        <a class="btn btn-outline-light btn-sm" asp-controller="Account" asp-action="Login">Log in</a>
+                        <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Register">Register</a>
+                    </div>
+                }
+                else
+                {
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        @if (user.IsOrganiser)
+                        {
+                            <li class="nav-item"><a class="nav-link @Active("Organiser")" asp-controller="Organiser" asp-action="Index"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("OrganiserEvents")" asp-controller="OrganiserEvents" asp-action="Index"><i class="bi bi-calendar-event me-1"></i>Events</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("OrganiserCategories")" asp-controller="OrganiserCategories" asp-action="Picker"><i class="bi bi-tags me-1"></i>Categories</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("OrganiserEnrolments")" asp-controller="OrganiserEnrolments" asp-action="Picker"><i class="bi bi-people me-1"></i>Enrolments</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("OrganiserResults")" asp-controller="OrganiserResults" asp-action="Picker"><i class="bi bi-stopwatch me-1"></i>Results</a></li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link @Active("Home", "Events")" asp-controller="Home" asp-action="Index"><i class="bi bi-flag me-1"></i>Upcoming events</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("Enrolments")" asp-controller="Enrolments" asp-action="Index"><i class="bi bi-ticket-perforated me-1"></i>My enrolments</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("MyResults")" asp-controller="MyResults" asp-action="Index"><i class="bi bi-trophy me-1"></i>My results</a></li>
+                        }
+                    </ul>
+
+                    <div class="dropdown">
+                        <button class="rd-userbtn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            @await Html.PartialAsync("_Avatar", new AvatarModel(user.ProfilePictureUrl, user.Initials))
+                            <span class="text-start d-none d-sm-block lh-sm">
+                                <span class="d-block fw-semibold">@user.FirstName</span>
+                                <span class="rd-role-chip">@user.Role</span>
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><span class="dropdown-item-text small text-muted">Signed in as<br /><strong class="text-body">@user.Email</strong></span></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item @Active("Profile")" asp-controller="Profile" asp-action="Index"><i class="bi bi-person-circle me-2"></i>My profile</a></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Sign out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <main id="main">
+        @RenderBody()
+    </main>
+
+    <footer class="rd-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+            <span><strong>RaceDay</strong> · Run it. Walk it. Ride it.</span>
+            <span>© @DateTime.Now.Year RaceDay</span>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

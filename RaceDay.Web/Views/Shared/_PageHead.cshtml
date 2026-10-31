@@ -1,0 +1,14 @@
+@model PageHead
+<header class="rd-pagehead">
+    <div class="container">
+        @if (Model.BackUrl is not null)
+        {
+            <a class="breadcrumb-link d-inline-block mb-2" href="@Model.BackUrl"><i class="bi bi-arrow-left"></i> @Model.BackLabel</a>
+        }
+        <h1>@Model.Title</h1>
+        @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
+        {
+            <p>@Model.Subtitle</p>
+        }
+    </div>
+</header>

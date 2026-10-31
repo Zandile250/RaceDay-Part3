@@ -1,0 +1,58 @@
+@model List<MyResultRow>
+@{
+    ViewData["Title"] = "My results";
+    var finished = Model.Where(r => r.Result.Status.Equals("Finished", StringComparison.OrdinalIgnoreCase)).ToList();
+    var best = finished.Where(r => r.Result.Position is not null).Select(r => r.Result.Position!.Value).DefaultIfEmpty(0).Min();
+}
+@await Html.PartialAsync("_PageHead", new PageHead("My results", "Your race history, published by the organisers once each event is over."))
+
+<div class="container py-4">
+    <partial name="_Alerts" />
+
+    @if (Model.Count == 0)
+    {
+        <div class="rd-card empty-state">
+            <i class="bi bi-trophy"></i>
+            <h3>No results yet</h3>
+            <p class="mb-0">After an event you entered finishes, the organiser publishes the times and they'll appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3"><div class="rd-card stat-tile"><i class="bi bi-flag-fill"></i><div class="num">@Model.Count</div><div class="lbl">Results</div></div></div>
+            <div class="col-6 col-md-3"><div class="rd-card stat-tile"><i class="bi bi-check2-circle"></i><div class="num">@finished.Count</div><div class="lbl">Races finished</div></div></div>
+            <div class="col-6 col-md-3"><div class="rd-card stat-tile"><i class="bi bi-award-fill"></i><div class="num">@(best > 0 ? UiHelpers.Ordinal(best) : "—")</div><div class="lbl">Best position</div></div></div>
+        </div>
+
+        <div class="rd-card">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Finish time</th><th>Position</th><th>Status</th></tr></thead>
+                    <tbody>
+                    @foreach (var r in Model)
+                    {
+                        var isFinished = r.Result.Status.Equals("Finished", StringComparison.OrdinalIgnoreCase);
+                        <tr>
+                            <td><a class="fw-semibold" asp-controller="Events" asp-action="Details" asp-route-id="@r.Result.EventId">@r.Result.EventName</a></td>
+                            <td>@(r.EventDate is DateTime d ? UiHelpers.DateShort(d) : "—")</td>
+                            <td>@r.Result.CategoryName</td>
+                            <td class="finish-time">@UiHelpers.FinishTime(r.Result.FinishTime)</td>
+                            <td>
+                                @if (r.Result.Position is int pos && isFinished)
+                                {
+                                    <span class="position-medal @(pos <= 3 ? "podium" : "")">@UiHelpers.Ordinal(pos)
+                                        @if (r.TotalFinishers is int total && total >= pos) { <small>of @total finishers</small> }
+                                    </span>
+                                }
+                                else { <span class="text-muted">—</span> }
+                            </td>
+                            <td><partial name="_StatusPill" model="r.Result.Status" /></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -19,7 +19,7 @@ public class AuthController : ApiControllerBase
         _config = config;
     }
 
-    /// <summary>Register a new Organiser or Participant account.</summary>
+    /// <summary>Register a new Participant or Organiser account.</summary>
     /// <remarks>
     /// Organisers must supply the correct <c>organiserInviteCode</c>, so that people cannot simply
     /// give themselves the Organiser role. Passwords are hashed with BCrypt before they are stored.
@@ -35,28 +35,30 @@ public class AuthController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
+        var roleName = request.Role.ToString();
+        var inviteCode = _config["Organiser:InviteCode"];
+
         if (request.Role == UserRole.Organiser &&
-            request.OrganiserInviteCode != _config["Organiser:InviteCode"])
+            (string.IsNullOrEmpty(inviteCode) || request.OrganiserInviteCode != inviteCode))
             return Forbidden("A valid organiser invite code is required to register as an Organiser.");
 
         var email = request.Email.Trim().ToLowerInvariant();
         if (await _db.Users.AnyAsync(u => u.Email == email))
             return Conflict(new { message = "That email address is already registered." });
 
+        var role = await _db.Roles.FirstAsync(r => r.RoleName == roleName);
         var user = new User
         {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
+            RoleId = role.RoleId,
+            FullName = request.FullName,
             Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            PhoneNumber = request.PhoneNumber,
-            DateOfBirth = request.DateOfBirth,
-            Role = request.Role
+            PhoneNumber = request.PhoneNumber
         };
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        return StatusCode(StatusCodes.Status201Created, ToResponse(user));
+        return StatusCode(StatusCodes.Status201Created, ToResponse(user, roleName));
     }
 
     /// <summary>Log in with email and password. Starts a session that stores your id and role.</summary>
@@ -68,14 +70,15 @@ public class AuthController : ApiControllerBase
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var email = request.Email.Trim().ToLowerInvariant();
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email);
 
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return Unauthorized(new { message = "Invalid email or password." });
 
-        HttpContext.Session.SetInt32(SessionKeys.UserId, user.Id);
-        HttpContext.Session.SetString(SessionKeys.Role, user.Role.ToString());
-        return Ok(ToResponse(user));
+        var roleName = user.Role!.RoleName;
+        HttpContext.Session.SetInt32(SessionKeys.UserId, user.UserId);
+        HttpContext.Session.SetString(SessionKeys.Role, roleName);
+        return Ok(ToResponse(user, roleName));
     }
 
     /// <summary>Log out and clear the session.</summary>
@@ -88,6 +91,6 @@ public class AuthController : ApiControllerBase
         return NoContent();
     }
 
-    internal static UserResponse ToResponse(User u) =>
-        new(u.Id, u.FirstName, u.LastName, u.Email, u.PhoneNumber, u.DateOfBirth, u.Role);
+    internal static UserResponse ToResponse(User u, string role) =>
+        new(u.UserId, u.FullName, u.Email, u.PhoneNumber, role, u.CreatedAt, u.ProfilePictureUrl);
 }

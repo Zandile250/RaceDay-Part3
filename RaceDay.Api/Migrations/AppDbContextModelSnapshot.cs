@@ -24,27 +24,34 @@ namespace RaceDay.Api.Migrations
 
             modelBuilder.Entity("RaceDay.Api.Models.Category", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("CategoryId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<decimal>("DistanceKm")
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<int>("EventId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("MaxAge")
-                        .HasColumnType("int");
+                    b.Property<int>("MaxParticipants")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
-                    b.Property<int?>("MinAge")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Price")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(8,2)")
+                        .HasDefaultValue(0m);
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
-                    b.HasKey("Id");
+                    b.HasKey("CategoryId");
 
                     b.HasIndex("EventId");
 
@@ -53,31 +60,35 @@ namespace RaceDay.Api.Migrations
 
             modelBuilder.Entity("RaceDay.Api.Models.Enrolment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("EnrolmentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnrolmentId"));
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("EnrolledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EventId")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("EnrolmentDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<int>("ParticipantId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("Confirmed");
+
+                    b.HasKey("EnrolmentId");
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("ParticipantId");
-
-                    b.HasIndex("EventId", "ParticipantId")
+                    b.HasIndex("ParticipantId", "CategoryId")
                         .IsUnique();
 
                     b.ToTable("Enrolments");
@@ -85,43 +96,55 @@ namespace RaceDay.Api.Migrations
 
             modelBuilder.Entity("RaceDay.Api.Models.Event", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("EventId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EventId"));
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("varchar(1000)");
 
                     b.Property<decimal>("DistanceKm")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("decimal(6,2)");
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("EventDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("EventName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
 
                     b.Property<string>("EventType")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("varchar(150)");
 
                     b.Property<int>("OrganiserId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<string>("RouteInfo")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.HasKey("EventId");
 
                     b.HasIndex("OrganiserId");
 
@@ -130,22 +153,34 @@ namespace RaceDay.Api.Migrations
 
             modelBuilder.Entity("RaceDay.Api.Models.Result", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("ResultId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResultId"));
+
+                    b.Property<DateTime>("CapturedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<int>("EnrolmentId")
                         .HasColumnType("int");
 
-                    b.Property<TimeSpan>("FinishTime")
+                    b.Property<TimeSpan?>("FinishTime")
                         .HasColumnType("time");
 
-                    b.Property<int>("Position")
+                    b.Property<int?>("Position")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("Finished");
+
+                    b.HasKey("ResultId");
 
                     b.HasIndex("EnrolmentId")
                         .IsUnique();
@@ -153,49 +188,84 @@ namespace RaceDay.Api.Migrations
                     b.ToTable("Results");
                 });
 
-            modelBuilder.Entity("RaceDay.Api.Models.User", b =>
+            modelBuilder.Entity("RaceDay.Api.Models.Role", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("RoleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
 
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("RoleId");
+
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            RoleName = "Organiser"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            RoleName = "Participant"
+                        });
+                });
+
+            modelBuilder.Entity("RaceDay.Api.Models.User", b =>
+                {
+                    b.Property<int>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("varchar(150)");
 
-                    b.Property<string>("FirstName")
+                    b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("varchar(20)");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
-                    b.HasKey("Id");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId");
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
                 });
@@ -205,7 +275,7 @@ namespace RaceDay.Api.Migrations
                     b.HasOne("RaceDay.Api.Models.Event", "Event")
                         .WithMany("Categories")
                         .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Event");
@@ -219,12 +289,6 @@ namespace RaceDay.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("RaceDay.Api.Models.Event", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("RaceDay.Api.Models.User", "Participant")
                         .WithMany()
                         .HasForeignKey("ParticipantId")
@@ -232,8 +296,6 @@ namespace RaceDay.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
-
-                    b.Navigation("Event");
 
                     b.Navigation("Participant");
                 });
@@ -254,10 +316,21 @@ namespace RaceDay.Api.Migrations
                     b.HasOne("RaceDay.Api.Models.Enrolment", "Enrolment")
                         .WithOne("Result")
                         .HasForeignKey("RaceDay.Api.Models.Result", "EnrolmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Enrolment");
+                });
+
+            modelBuilder.Entity("RaceDay.Api.Models.User", b =>
+                {
+                    b.HasOne("RaceDay.Api.Models.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("RaceDay.Api.Models.Enrolment", b =>

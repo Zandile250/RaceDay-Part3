@@ -1,3 +1,7 @@
+# Whole RaceDay platform with one command:   docker compose up --build
+#   MVC web app ........ http://localhost:8081
+#   API + Swagger ...... http://localhost:8080/swagger
+#   (SQL Server and the Azurite Blob Storage emulator run behind them)
 services:
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -13,13 +17,40 @@ services:
       retries: 10
       start_period: 20s
 
+  # Local stand-in for Azure Blob Storage (same API, same SDK). Swap for a real
+  # storage account by changing AzureStorage__ConnectionString below.
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite-data:/data
+
   api:
     build: .
     depends_on:
       db:
         condition: service_healthy
+      azurite:
+        condition: service_started
     ports:
       - "8080:8080"
     environment:
       ConnectionStrings__DefaultConnection: "Server=db;Database=RaceDayDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True"
       Organiser__InviteCode: "RACEDAY-ORG-2026"
+      AzureStorage__ContainerName: "raceday-images"
+      # Azurite's well-known public development account (not a secret).
+      AzureStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+
+  web:
+    build: ./RaceDay.Web
+    depends_on:
+      - api
+    ports:
+      - "8081:8080"
+    environment:
+      Api__BaseUrl: "http://api:8080/"
+
+volumes:
+  azurite-data:

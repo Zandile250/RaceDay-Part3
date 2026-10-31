@@ -1,0 +1,100 @@
+@model EventDetailsViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = e.EventName;
+    var backUrl = Me.IsOrganiser ? Url.Action("Index", "OrganiserEvents") : Url.Action("Index", "Home");
+    var backLabel = Me.IsOrganiser ? "Back to my events" : "Back to upcoming events";
+}
+@await Html.PartialAsync("_PageHead", new PageHead(e.EventName, null, backLabel, backUrl))
+
+<div class="container py-4">
+    <partial name="_Alerts" />
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            @await Html.PartialAsync("_EventBanner", new BannerModel(e.ImageUrl, e.EventType, e.EventName + " banner", Hero: true))
+
+            <div class="rd-card mt-4">
+                <div class="rd-card-head"><h2>About this event</h2>
+                    @if (Model.IsPast) { <span class="status-pill status-neutral">Finished</span> }
+                    else { <span class="status-pill status-confirmed"><i class="bi bi-calendar-check"></i>@UiHelpers.Countdown(e.EventDate)</span> }
+                </div>
+                <div class="rd-card-body">
+                    <p style="white-space: pre-line">@(string.IsNullOrWhiteSpace(e.Description) ? "The organiser hasn't added a description yet." : e.Description)</p>
+                    @if (!string.IsNullOrWhiteSpace(e.RouteInfo))
+                    {
+                        <h3 class="h5 mt-4"><i class="bi bi-signpost-2 text-primary"></i> Route</h3>
+                        <p class="mb-0" style="white-space: pre-line">@e.RouteInfo</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="rd-card">
+                <div class="rd-card-body">
+                    <dl class="row mb-0 gy-2">
+                        <dt class="col-5 text-muted fw-semibold"><i class="bi bi-calendar3 text-primary"></i> Date</dt><dd class="col-7 mb-0">@UiHelpers.DateLong(e.EventDate)</dd>
+                        <dt class="col-5 text-muted fw-semibold"><i class="bi bi-clock text-primary"></i> Start</dt><dd class="col-7 mb-0">@UiHelpers.TimeOfDay(e.EventDate)</dd>
+                        <dt class="col-5 text-muted fw-semibold"><i class="bi bi-geo-alt-fill text-primary"></i> Where</dt><dd class="col-7 mb-0">@e.Location</dd>
+                        <dt class="col-5 text-muted fw-semibold"><i class="bi bi-signpost-split text-primary"></i> Distance</dt><dd class="col-7 mb-0">@UiHelpers.Km(e.DistanceKm)</dd>
+                        <dt class="col-5 text-muted fw-semibold"><i class="bi @UiHelpers.TypeIcon(e.EventType) text-primary"></i> Type</dt><dd class="col-7 mb-0">@e.EventType</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="rd-card mt-4">
+                <div class="rd-card-head"><h2>Categories</h2>
+                    @if (Model.IsOwner)
+                    {
+                        <a class="btn btn-outline-primary btn-sm" asp-controller="OrganiserCategories" asp-action="Index" asp-route-eventId="@e.EventId">Manage</a>
+                    }
+                </div>
+                @if (e.Categories.Count == 0)
+                {
+                    <div class="rd-card-body text-muted">No categories have been added yet, so enrolment isn't open.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var c in e.Categories.OrderBy(c => c.DistanceKm))
+                        {
+                            Model.MyEnrolments.TryGetValue(c.CategoryId, out var mine);
+                            <li class="list-group-item p-3">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <div class="fw-bold fs-5 rd-display" style="font-family:'Barlow Condensed'">@c.CategoryName</div>
+                                        <div class="small text-muted">
+                                            @UiHelpers.Km(c.DistanceKm) · @UiHelpers.Money(c.Price) ·
+                                            @(c.MaxParticipants > 0 ? $"limit {c.MaxParticipants}" : "no limit")
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        @if (mine is not null)
+                                        {
+                                            <partial name="_StatusPill" model="mine.Status" />
+                                        }
+                                        else if (Me.IsParticipant && !Model.IsPast)
+                                        {
+                                            <form asp-controller="Enrolments" asp-action="Enrol" method="post" data-busy="Enrolling…">
+                                                <input type="hidden" name="categoryId" value="@c.CategoryId" />
+                                                <input type="hidden" name="eventId" value="@e.EventId" />
+                                                <button type="submit" class="btn btn-primary btn-sm">Enrol</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                @if (Model.MyEnrolments.Count > 0)
+                {
+                    <div class="rd-card-body border-top small">
+                        <a asp-controller="Enrolments" asp-action="Index"><i class="bi bi-ticket-perforated"></i> See all my enrolments</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

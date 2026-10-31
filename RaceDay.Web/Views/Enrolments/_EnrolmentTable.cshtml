@@ -1,0 +1,33 @@
+@model (List<MyEnrolmentRow> Rows, string Title, bool CanCancel)
+<div class="rd-card">
+    <div class="rd-card-head"><h2>@Model.Title</h2><span class="text-muted small">@Model.Rows.Count @(Model.Rows.Count == 1 ? "enrolment" : "enrolments")</span></div>
+    <div class="table-responsive">
+        <table class="table rd-table">
+            <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Enrolled on</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td>
+                        <a class="fw-semibold" asp-controller="Events" asp-action="Details" asp-route-id="@r.Enrolment.EventId">@r.Enrolment.EventName</a>
+                        @if (r.EventLocation is not null) { <div class="small text-muted"><i class="bi bi-geo-alt-fill text-primary"></i> @r.EventLocation</div> }
+                    </td>
+                    <td>@(r.EventDate is DateTime d ? UiHelpers.DateShort(d) : "—")</td>
+                    <td>@r.Enrolment.CategoryName</td>
+                    <td>@UiHelpers.DateShort(r.Enrolment.EnrolmentDate)</td>
+                    <td><partial name="_StatusPill" model="r.Enrolment.Status" /></td>
+                    <td class="text-end">
+                        @if (Model.CanCancel)
+                        {
+                            <form asp-controller="Enrolments" asp-action="Cancel" asp-route-id="@r.Enrolment.EnrolmentId" method="post"
+                                  data-confirm="Cancel your enrolment in @r.Enrolment.EventName (@r.Enrolment.CategoryName)?">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Cancel</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

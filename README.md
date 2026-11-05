@@ -201,3 +201,6 @@ Brief section	                                                                  
 The GitHub Actions workflow (.github/workflows/ci.yml) runs on every push. It runs the API tests, builds the MVC project and builds the MVC Docker image.
 <img width="874" height="356" alt="image" src="https://github.com/user-attachments/assets/6a3a273e-e3d4-4af9-8a4c-4c6919564c22" />
 
+
+https://youtu.be/Yw7k_FVcmtk
+
